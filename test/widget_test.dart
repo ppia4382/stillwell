@@ -1,30 +1,44 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stillwell/features/provider/auth_provider.dart'
+    show AuthNotifier, authProvider;
+import 'package:stillwell/features/routine_check/data/datasources/fitbit_remote_datasource.dart'
+    show FitbitRemoteDatasource;
 import 'package:stillwell/main.dart';
 
+// "Fake" Notifier for the test
+class FakeAuthNotifier extends AuthNotifier {
+  // Initialize directly into the "Ready" state with no token
+  FakeAuthNotifier() : super(FitbitRemoteDatasource()) {
+    state = const AsyncValue.data(null);
+  }
+
+  @override
+  Future<void> loadSession() async {
+    // Do nothing so it doesn't try to touch SecureStorage or DotEnv
+  }
+}
+
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('StillWell shows welcome text when no token is found', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          // "Intercept" the provider and swap the real one for the Fake
+          authProvider.overrideWith((ref) => FakeAuthNotifier()),
+        ],
+        child: const StillWell(),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    // Render the frame
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify the UI reacted to the Fake state
+    expect(find.text("Welcome to StillWell"), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 }

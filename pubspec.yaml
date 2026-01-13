@@ -19,7 +19,8 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.1
+#pinned range to avoid defects from incompatible automatic library updates
+  sdk: '>=3.10.4 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -31,20 +32,36 @@ dependencies:
   flutter:
     sdk: flutter
 
+  flutter_dotenv: ^6.0.0    # Load .env files for secrets like Fitbit client_id  
+  # Used for State Management.
+  # We will use Riverpod to store the token. 
+  # If the user closes the app and reopens it, Riverpod helps us remember if they are still "Logged In."
+  flutter_riverpod: ^2.5.1 #2.4.9    # For State Management
+  # Launches system web browser for OAuth flows (Fitbit login), handles redirect callback, extracts authorization code from URL.
+  # Fitbit OAuth requires browser-based login (not in-app webview) for security. This package opens Safari/Chrome popup, captures localhost:port/callback?c
+  flutter_web_auth_2: ^4.1.0  # For the OAuth Browser popup
+  # Makes HTTP POST to Fitbit's token endpoint (https://api.fitbit.com/oauth2/token) to exchange authorization code for access/refresh tokens.
+  # After browser auth, send client_id, code, grant_type=authorization_code to get JSON response with access_token, refresh_token, expires_in. Handles head
+  http: ^1.2.1                # For API calls 
+  dotenv: ^4.2.0
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  flutter_secure_storage: ^9.0.0 # Downgraded slightly for better compatibility
+  state_notifier: ^1.0.0                
+
 dev_dependencies:
   flutter_test:
-    sdk: flutter
+    sdk: flutter 
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^6.0.0
+  flutter_lints: ^3.0.0 # Downgraded from 6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -56,6 +73,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+  - .env
 
   # To add assets to your application, add an assets section, like this:
   # assets:
